@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ candidate.name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ candidate.name }}</h1>
+  <p><a href="/recruit/search">← Back to search</a></p>
+  <p class="muted">
+    {{ candidate.email }}
+    {% if candidate.phone %} · {{ candidate.phone }}{% endif %}
+    · {{ candidate.city or 'Location n/a' }}
+    · {{ candidate.years_experience or '?' }} yrs
+    · <span class="pill">{{ candidate.source }}</span>
+    {% if candidate.source_portal %}<span class="pill">{{ candidate.source_portal }}</span>{% endif %}
+  </p>
+  <p><strong>Skills:</strong> {{ candidate.skills }}</p>
+  {% if candidate.profile_summary %}
+  <p><strong>Summary:</strong> {{ candidate.profile_summary }}</p>
+  {% endif %}
+  <h2>Resume preview</h2>
+  <pre class="preview">{{ preview or 'No text extracted.' }}</pre>
+</section>
+<section class="card">
+  <h2>Shortlist</h2>
+  <form method="post" action="/recruit/candidates/{{ candidate.id }}/shortlist">
+    <label>Status
+      <select name="status">
+        <option value="NEW" {% if shortlist and shortlist.status == 'NEW' %}selected{% endif %}>NEW</option>
+        <option value="CONTACTED" {% if shortlist and shortlist.status == 'CONTACTED' %}selected{% endif %}>CONTACTED</option>
+        <option value="REJECTED" {% if shortlist and shortlist.status == 'REJECTED' %}selected{% endif %}>REJECTED</option>
+      </select>
+    </label>
+    <label>Notes<textarea name="notes" rows="3">{% if shortlist %}{{ shortlist.notes or '' }}{% endif %}</textarea></label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Save shortlist</button></p>
+  </form>
+</section>
+{% endblock %}

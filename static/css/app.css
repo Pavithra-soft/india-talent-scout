@@ -1,0 +1,121 @@
+:root {
+  --bg: #0f1419;
+  --panel: #1a2332;
+  --text: #e7ecf3;
+  --muted: #9aa7b8;
+  --accent: #3d8bfd;
+  --accent2: #2ecc71;
+  --border: #2a3544;
+  --danger: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.layout {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+header nav a { margin-left: 1rem; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.muted { color: var(--muted); font-size: 0.92rem; }
+
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.btn-secondary { background: #445066; }
+
+label { display: block; margin-top: 0.75rem; font-size: 0.9rem; }
+
+input[type=text], input[type=email], input[type=password], input[type=number], textarea, select {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #121820;
+  color: var(--text);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.flash-ok { color: var(--accent2); }
+.flash-err { color: var(--danger); }
+
+.hero h1 { margin-top: 0; }
+.hero-actions { margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #243044;
+  font-size: 0.8rem;
+}
+
+pre.preview {
+  white-space: pre-wrap;
+  background: #121820;
+  padding: 0.75rem;
+  border-radius: 6px;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}

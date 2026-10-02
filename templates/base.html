@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}India Talent Scout{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+  <div class="layout">
+    <header>
+      <strong><a href="/">India Talent Scout</a></strong>
+      <nav>
+        <a href="/join">Join</a>
+        <a href="/recruit/login">Recruiter</a>
+      </nav>
+    </header>
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Import CSV{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Import candidates (CSV)</h1>
+  <p><a href="/recruit">← Dashboard</a> · <a href="/recruit/import/template.csv">Download template</a></p>
+  <p class="muted">Use exports from your paid portal accounts. Columns: name, email, phone, city, years_experience, skills, last_active_at, source_portal, resume_url_or_notes, profile_summary</p>
+  <form method="post" action="/recruit/import" enctype="multipart/form-data">
+    <label>CSV file<input type="file" name="file" accept=".csv" required></label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Import</button></p>
+  </form>
+</section>
+{% if result %}
+<section class="card">
+  <h2>Import summary</h2>
+  <p class="flash-ok">Imported {{ result.imported }} row(s).</p>
+  {% if result.errors %}
+  <h3>Errors</h3>
+  <ul class="flash-err">
+    {% for err in result.errors %}
+    <li>{{ err }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

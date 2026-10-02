@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: india-talent-scout
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: talent-scout-db
+          property: connectionString
+      - key: RECRUITER_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DEMO_SEED
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: STORAGE_DIR
+        value: /app/data/resumes
+
+databases:
+  - name: talent-scout-db
+    plan: free

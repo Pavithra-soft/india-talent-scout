@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Job portals{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Job portal connections</h1>
+  <p><a href="/recruit">← Dashboard</a></p>
+  <p class="muted">
+    Enter recruiter credentials per portal. On search, select portals and enable
+    <strong>Pull from portals</strong> to sync resumes into this app using your criteria.
+    Indian portals do not offer free resume APIs — live login is limited; set
+    <code>PORTAL_LIVE_LOGIN=true</code> to probe reachability only.
+  </p>
+  {% if flash %}
+  <p class="flash-ok">{{ flash }}</p>
+  {% endif %}
+</section>
+{% for portal in portals %}
+<section class="card">
+  <h2>{{ portal.name }}</h2>
+  <p class="muted">{{ portal.notes }}</p>
+  <p>
+    <strong>Login:</strong>
+    <a href="{{ portal.login_url }}" target="_blank" rel="noopener">{{ portal.login_url }}</a>
+  </p>
+  <p>
+    <strong>Recruiter search:</strong>
+    <a href="{{ portal.recruiter_home_url }}" target="_blank" rel="noopener">{{ portal.recruiter_home_url }}</a>
+  </p>
+  {% if portal.credential %}
+  <p class="muted">Credentials saved for this portal.
+    {% if portal.credential.authenticated_at %}
+    Last auth {{ portal.credential.authenticated_at.strftime('%Y-%m-%d %H:%M') }} UTC.
+    {% endif %}
+    {% if portal.credential.last_sync_at %}
+    Last sync {{ portal.credential.last_sync_at.strftime('%Y-%m-%d %H:%M') }} UTC.
+    {% endif %}
+  </p>
+  {% if portal.credential.last_error %}
+  <p class="flash-err">{{ portal.credential.last_error }}</p>
+  {% endif %}
+  {% endif %}
+  <form method="post" action="/recruit/portals/{{ portal.key }}/credentials" class="grid-2">
+    <label>Username<input type="text" name="username" required autocomplete="username"></label>
+    <label>Password<input type="password" name="password" required autocomplete="current-password"></label>
+    <p style="grid-column: 1 / -1">
+      <button class="btn" type="submit">Save &amp; connect</button>
+      {% if portal.credential %}
+      <button class="btn btn-secondary" formaction="/recruit/portals/{{ portal.key }}/test" formmethod="post" type="submit">Test connection</button>
+      {% endif %}
+    </p>
+  </form>
+</section>
+{% endfor %}
+{% endblock %}

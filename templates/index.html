@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Home · India Talent Scout{% endblock %}
+{% block content %}
+<section class="card hero">
+  <h1>HR recruiter talent pool (India)</h1>
+  <p class="muted">
+    Search opt-in candidates and CSV imports by skills, location, experience, and recency.
+    This app does not scrape Naukri, Indeed, or other portals — use your own pool or portal exports.
+  </p>
+  <div class="hero-actions">
+    <a class="btn" href="/join">Join as candidate</a>
+    <a class="btn btn-secondary" href="/recruit/login">Recruiter login</a>
+  </div>
+</section>
+<section class="card">
+  <h2>How it works</h2>
+  <ol class="muted">
+    <li>Candidates upload a resume at <a href="/join">/join</a> (consent required).</li>
+    <li>Recruiters import CSV exports from paid portals or search the pool by keywords.</li>
+    <li>Optional Gemini key improves skill extraction and result ranking.</li>
+  </ol>
+</section>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Search candidates{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Search candidates</h1>
+  <p><a href="/recruit">← Dashboard</a> · <a href="/recruit/portals">Portal logins</a></p>
+  <form method="get" action="/recruit/search">
+    <input type="hidden" name="run" value="1">
+    <label>Skills (keywords)<input type="text" name="skills" value="{{ params.skills }}"></label>
+    <div class="grid-2">
+      <label>City<input type="text" name="city" value="{{ params.city or '' }}"></label>
+      <label>Active within (days)<input type="number" name="active_days" value="{{ params.active_days }}"></label>
+    </div>
+    <div class="grid-2">
+      <label>Min years<input type="number" name="min_years" value="{{ params.min_years or '' }}"></label>
+      <label>Max years<input type="number" name="max_years" value="{{ params.max_years or '' }}"></label>
+    </div>
+    <label>Source filter
+      <select name="source">
+        <option value="">Any</option>
+        <option value="OPT_IN" {% if params.source == 'OPT_IN' %}selected{% endif %}>Opt-in</option>
+        <option value="CSV" {% if params.source == 'CSV' %}selected{% endif %}>CSV import</option>
+        <option value="DEMO" {% if params.source == 'DEMO' %}selected{% endif %}>Demo</option>
+        <option value="PORTAL" {% if params.source == 'PORTAL' %}selected{% endif %}>Portal sync</option>
+      </select>
+    </label>
+    <fieldset class="card" style="margin-top:0.75rem;border-style:dashed">
+      <legend>Portals</legend>
+      <p class="muted">Select one or more portals. Enable pull to fetch resumes using saved credentials.</p>
+      {% for portal in all_portals %}
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem">
+        <input type="checkbox" name="portals" value="{{ portal.key }}"
+          {% if portal.key in selected_portals %}checked{% endif %}>
+        {{ portal.name }}
+        {% if portal.credential and portal.credential.authenticated_at %}
+        <span class="pill">connected</span>
+        {% elif portal.credential %}
+        <span class="pill">credentials saved</span>
+        {% else %}
+        <span class="pill">no login</span>
+        {% endif %}
+      </label>
+      {% endfor %}
+      <label style="margin-top:0.75rem">
+        <input type="checkbox" name="include_local" value="1" {% if params.include_local_pool %}checked{% endif %}>
+        Include local pool (opt-in / CSV / demo)
+      </label>
+      <label>
+        <input type="checkbox" name="sync_portals" value="1" {% if params.sync_portals %}checked{% endif %}>
+        Pull from selected portals before search (uses criteria above)
+      </label>
+    </fieldset>
+    <label>Job brief (optional AI rerank)<textarea name="job_brief" rows="3">{{ params.job_brief or '' }}</textarea></label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Search</button></p>
+  </form>
+</section>
+{% if sync_messages %}
+<section class="card">
+  <h2>Portal sync</h2>
+  <ul class="muted">
+    {% for msg in sync_messages %}
+    <li>{{ msg }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% if results is not none %}
+<section class="card">
+  <h2>Results ({{ results|length }})</h2>
+  {% if results|length == 0 %}
+  <p class="muted">No matches. Connect portals, enable pull, or broaden skills / active-days.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Skills</th><th>City</th><th>Portal</th><th>Yrs</th><th>Active</th><th>Score</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for row in results %}
+      <tr>
+        <td>{{ row.candidate.name }}</td>
+        <td>{{ row.candidate.skills }}</td>
+        <td>{{ row.candidate.city or '—' }}</td>
+        <td>{{ row.candidate.source_portal or row.candidate.source }}</td>
+        <td>{{ row.candidate.years_experience or '—' }}</td>
+        <td>{{ row.candidate.last_active_at.strftime('%Y-%m-%d') if row.candidate.last_active_at else '—' }}</td>
+        <td>{{ '%.1f'|format(row.score) }}</td>
+        <td><a href="/recruit/candidates/{{ row.candidate.id }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

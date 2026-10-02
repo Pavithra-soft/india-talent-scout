@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Recruiter · Dashboard{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Recruiter dashboard</h1>
+  <p class="muted">{{ total }} candidates in pool · {{ shortlist_count }} shortlisted</p>
+  <p>
+    <a class="btn" href="/recruit/search">Search candidates</a>
+    <a class="btn btn-secondary" href="/recruit/portals">Portal logins</a>
+    <a class="btn btn-secondary" href="/recruit/import">Import CSV</a>
+    <a class="btn btn-secondary" href="/recruit/shortlist">Shortlist</a>
+  </p>
+  <form method="post" action="/recruit/logout" style="margin-top:1rem">
+    <button class="btn btn-secondary" type="submit">Log out</button>
+  </form>
+</section>
+{% endblock %}

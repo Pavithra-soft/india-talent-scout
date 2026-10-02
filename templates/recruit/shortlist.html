@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Shortlist{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Shortlist</h1>
+  <p><a href="/recruit">← Dashboard</a></p>
+  {% if rows|length == 0 %}
+  <p class="muted">No shortlisted candidates yet.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr><th>Candidate</th><th>Status</th><th>Updated</th><th>Notes</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.candidate.name }}</td>
+        <td>{{ row.status }}</td>
+        <td>{{ row.updated_at.strftime('%Y-%m-%d') }}</td>
+        <td>{{ row.notes or '—' }}</td>
+        <td><a href="/recruit/candidates/{{ row.candidate.id }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}
