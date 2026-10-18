@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Talent Scout capture",
+  "version": "1.0.0",
+  "description": "Send profiles you select from a page you already have open. Does not read cookies or log in.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Capture visible profiles"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": [
+    "http://127.0.0.1:8081/*",
+    "https://india-talent-scout.onrender.com/*"
+  ]
+}

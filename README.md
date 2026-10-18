@@ -71,6 +71,17 @@ Sample files for a dry run: [`samples/jd.txt`](samples/jd.txt) and [`samples/res
 
 **Portal sync note:** Naukri, Shine, Indeed, Foundit, and Instahyre do not expose free resume APIs. With default settings, saved credentials enable **demo sync** (sample profiles tagged by portal). Set `PORTAL_LIVE_LOGIN=true` only to check whether login pages are reachable. Production use requires licensed API connectors in [`app/portals/base.py`](app/portals/base.py) or CSV export import.
 
+### Portal search from a JD
+
+Open **Portal search** at `/recruit/jd/portals` after the JD is on the JD match page.
+
+1. Build a search plan (skills, titles, locations, and a Boolean string per portal). Edit it and approve it before any search runs. Saved plans stay on the temporary workspace.
+2. Run the mock portal for a demo, a licensed JSON API if you have a key, a CSV from the portal’s own export, or the browser extension in `extension/`. The extension only reads a tab you already opened. Portal passwords are not stored.
+3. Results are de-duplicated, scored with the JD ranker, and filtered like the JD match table.
+4. Download writes files in the browser (`Rank_Name_Portal_YYYYMMDD.txt`) or falls back to a ZIP. **Send downloaded folder to analysis** parses those files on the JD match page.
+
+How to add a connector, and the open questions, are in [`docs/portal-connectors.md`](docs/portal-connectors.md).
+
 ## Candidate workflow
 
 Visit `/join`, upload PDF/DOCX/TXT, enter skills, and consent to share the profile.

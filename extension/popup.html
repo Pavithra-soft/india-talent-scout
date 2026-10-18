@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Talent Scout capture</title>
+  <style>
+    body { font: 14px sans-serif; width: 320px; margin: 12px; }
+    label { display: block; margin: 6px 0; }
+    button { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <p>Select visible profiles on this tab. Cookies and passwords stay in the browser.</p>
+  <label>App origin <input id="origin" value="http://127.0.0.1:8081"></label>
+  <label>Portal name <input id="portal" value="browser"></label>
+  <div id="list"></div>
+  <button id="capture" type="button">Read this page</button>
+  <button id="send" type="button">Send selected</button>
+  <p id="status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>

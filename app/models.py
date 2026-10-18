@@ -119,6 +119,12 @@ class JdWorkspace(Base):
     profiles: Mapped[list["JdProfile"]] = relationship(
         back_populates="workspace", cascade="all, delete-orphan"
     )
+    search_plans: Mapped[list["PortalSearchPlan"]] = relationship(
+        cascade="all, delete-orphan"
+    )
+    portal_hits: Mapped[list["PortalHit"]] = relationship(
+        cascade="all, delete-orphan"
+    )
 
 
 class JdProfile(Base):
@@ -143,6 +149,61 @@ class JdProfile(Base):
     rationale: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     workspace: Mapped["JdWorkspace"] = relationship(back_populates="profiles")
+
+
+class PortalSearchPlan(Base):
+    __tablename__ = "portal_search_plans"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("jd_workspaces.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, default="Search plan")
+    plan_json: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    approved: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PortalHit(Base):
+    __tablename__ = "portal_hits"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("jd_workspaces.id", ondelete="CASCADE"), index=True)
+    portal: Mapped[str] = mapped_column(String(40), nullable=False, default="")
+    portal_profile_id: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    name: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    email: Mapped[str] = mapped_column(String(320), nullable=False, default="")
+    phone: Mapped[str] = mapped_column(String(20), nullable=False, default="")
+    company: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    location: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    years_experience: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    notice_raw: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    notice_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    snippet: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    matching_skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    missing_skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    rationale: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    downloaded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class PortalApiConfig(Base):
+    __tablename__ = "portal_api_configs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    base_url: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    api_key_enc: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class RecruitAudit(Base):
+    __tablename__ = "recruit_audit"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(40), nullable=False)
+    detail: Mapped[str] = mapped_column(String(300), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class MailConnection(Base):

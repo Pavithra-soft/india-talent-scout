@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Portal search{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Search portals from the JD</h1>
+  <p class="muted">
+    You need a valid recruiter licence for each portal you use, and you are responsible for staying inside that portal’s terms.
+    This app does not log in to portals, store portal passwords, or crawl their sites.
+    Search plans and results sit in the same temporary workspace as JD match
+    {% if workspace %}until {{ workspace.expires_at.strftime("%Y-%m-%d %H:%M UTC") }}{% else %}and expire on the same timer{% endif %}.
+    {% if llm_enabled %}
+      Gemini may read the job description when a search plan is built. Only the description text is sent.
+    {% else %}
+      Search plans are built with the same rules as JD ranking. Set GEMINI_API_KEY to also ask Gemini for job titles.
+    {% endif %}
+  </p>
+  {% if message %}<p class="flash-ok">{{ message }}</p>{% endif %}
+  <p><a href="/recruit/jd">Back to JD match</a></p>
+</section>
+
+<section class="card" id="portal-app">
+  <h2>1. Search plan</h2>
+  <label>Job description
+    <textarea id="jd-text" name="jd_text" rows="8">{{ workspace.jd_text if workspace else "" }}</textarea>
+  </label>
+  <p>
+    <button class="btn" type="button" id="build-plan">Build search plan</button>
+  </p>
+  <p class="muted" id="plan-status"></p>
+  <form id="plan-form" method="post" action="/recruit/jd/portals/plan/save">
+    <input type="hidden" name="plan_json" id="plan-json" value="">
+    <label>Plan name <input name="name" value="JD search"></label>
+    <label>Must-have skills <textarea name="must_have" id="must-have" rows="2"></textarea></label>
+    <label>Nice-to-have skills <textarea name="nice_to_have" id="nice-to-have" rows="2"></textarea></label>
+    <label>Titles <textarea name="titles" id="titles" rows="2"></textarea></label>
+    <label>Minimum years <input name="min_years" id="min-years" inputmode="numeric"></label>
+    <label>Maximum years <input name="max_years" id="max-years" inputmode="numeric"></label>
+    <label>Locations <input name="locations" id="locations"></label>
+    <label>Notice preference <input name="notice" id="notice"></label>
+    <label>Generic Boolean <input name="query_generic" id="query-generic"></label>
+    <label>Naukri keywords <input name="query_naukri" id="query-naukri"></label>
+    <label>LinkedIn Boolean <input name="query_linkedin" id="query-linkedin"></label>
+    <label>Indeed query <input name="query_indeed" id="query-indeed"></label>
+    <label><input type="checkbox" name="approved" value="1" id="approved"> I approve this plan</label>
+    <button class="btn" type="submit">Save plan</button>
+  </form>
+  {% if plans %}
+  <h3>Saved plans</h3>
+  <ul>
+    {% for plan in plans %}
+    <li>{{ plan.name }} {% if plan.approved %}approved{% else %}draft{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>2. Connectors</h2>
+  <ul>
+    {% for connector in connectors %}
+    <li>{{ connector.label }} — {% if connector.enabled %}on{% else %}off{% endif %}{% if connector.quota is not none %} · quota remaining {{ connector.quota }}{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/recruit/jd/portals/api-config">
+    <p class="muted">Optional licensed JSON API. The key is encrypted and is not a portal password. Leave the key blank to keep the saved one.</p>
+    <label>API base URL <input name="base_url" placeholder="https://partner.example/api"></label>
+    <label>API key <input name="api_key" type="password" autocomplete="off"></label>
+    <label><input type="checkbox" name="enabled" value="1" checked> Enabled</label>
+    <button class="btn btn-secondary" type="submit">Save API settings</button>
+  </form>
+  <form method="post" action="/recruit/jd/portals/csv" enctype="multipart/form-data">
+    <p class="muted">Or import a CSV the portal’s own export produced. Headers: name, email, phone, skills, location, company, years, notice.</p>
+    <input type="file" name="upload" accept=".csv,text/csv">
+    <button class="btn btn-secondary" type="submit">Import CSV</button>
+  </form>
+  <p class="muted">A Chrome or Edge extension in <code>extension/</code> can capture rows from a portal page you already have open. It does not read cookies.</p>
+</section>
+
+<section class="card">
+  <h2>3. Results</h2>
+  <form id="search-form" method="post" action="/recruit/jd/portals/search">
+    <input type="hidden" name="plan_json" id="search-plan-json" value="">
+    <input type="hidden" name="jd_text" id="search-jd-text" value="">
+    <label><input type="checkbox" name="connectors" value="mock" checked> Mock portal</label>
+    <label><input type="checkbox" name="connectors" value="licensed_api"> Licensed API</label>
+    <button class="btn" type="submit" id="run-search">Search approved plan</button>
+  </form>
+
+  <form method="get" action="/recruit/jd/portals">
+    <label>Notice
+      <select name="notice">
+        {% for value, label in [("any", "Any"), ("immediate", "Immediate"), ("15", "15 days"), ("30", "30 days"), ("60", "60 days"), ("90", "90 days")] %}
+        <option value="{{ value }}" {% if filters.notice == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Location
+      <select name="locations">
+        <option value="">Any</option>
+        {% for place in locations %}
+        <option value="{{ place }}" {% if place in filters.locations %}selected{% endif %}>{{ place }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Skills <input name="skills" value="{{ filters.skills }}"></label>
+    <label>Previous company <input name="company" value="{{ filters.company }}"></label>
+    <label>Minimum score <input name="score_min" value="{{ filters.score_min }}"></label>
+    <label>Minimum years <input name="years_min" value="{{ filters.years_min }}"></label>
+    <label>Maximum years <input name="years_max" value="{{ filters.years_max }}"></label>
+    <button class="btn btn-secondary" type="submit">Filter</button>
+  </form>
+
+  <form id="hit-form">
+    <p>
+      <button class="btn btn-secondary" type="button" id="select-all">Select all</button>
+      <label>Top N <input id="top-n" inputmode="numeric" style="width:4rem"></label>
+      <button class="btn btn-secondary" type="button" id="select-top">Select top N</button>
+      <label><input type="checkbox" id="per-jd-folder"> Subfolder per JD</label>
+      <button class="btn" type="button" id="download-btn">Download</button>
+      <button class="btn btn-secondary" type="button" id="retry-btn">Retry failed</button>
+      <button class="btn btn-secondary" type="button" id="analyze-btn">Send downloaded folder to analysis</button>
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th></th><th>Score</th><th>Name</th><th>Portal</th><th>Matching</th><th>Missing</th><th>Location</th><th>Company</th><th>Notice</th><th>Years</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for hit in hits %}
+          <tr>
+            <td><input type="checkbox" name="hit_ids" value="{{ hit.id }}" {% if hit.downloaded %}data-downloaded="1"{% endif %}></td>
+            <td>{{ hit.score }}</td>
+            <td>{{ hit.name }}</td>
+            <td>{{ hit.portal }}</td>
+            <td>{{ hit.matching_skills }}</td>
+            <td>{{ hit.missing_skills }}</td>
+            <td>{{ hit.location }}</td>
+            <td>{{ hit.company }}</td>
+            <td>{{ hit.notice_raw }}</td>
+            <td>{{ hit.years_experience if hit.years_experience is not none else "" }}</td>
+            <td>
+              <button class="btn btn-secondary similar" type="button" data-id="{{ hit.id }}">Find similar</button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11">No portal results yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+  <p class="muted" id="download-status"></p>
+  <pre id="download-log" class="muted"></pre>
+</section>
+
+<form method="post" action="/recruit/jd/clear">
+  <button class="btn btn-secondary" type="submit">Clear temporary data</button>
+</form>
+<script id="saved-plan" type="application/json">{{ latest_plan | tojson }}</script>
+<script src="/static/js/portal_search.js"></script>
+{% endblock %}
