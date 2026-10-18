@@ -42,6 +42,10 @@ With `DEMO_SEED=true`, 15 demo India profiles load when the database is empty.
 | `STORAGE_DIR` | Resume upload directory |
 | `PORT` | Listen port. Default `8081` |
 | `PORTAL_LIVE_LOGIN` | `true` to probe portal login URLs (no CAPTCHA bypass) |
+| `JD_TTL_HOURS` | How long a JD-match workspace is kept. Default `24` |
+| `OAUTH_REDIRECT_BASE` | Public origin for Gmail/Outlook draft connect, no trailing path |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | Optional. Gmail draft connect |
+| `MICROSOFT_OAUTH_CLIENT_ID` / `MICROSOFT_OAUTH_CLIENT_SECRET` | Optional. Outlook draft connect |
 
 ## Recruiter workflow
 
@@ -53,6 +57,17 @@ With `DEMO_SEED=true`, 15 demo India profiles load when the database is empty.
    `name,email,phone,city,years_experience,skills,last_active_at,source_portal,resume_url_or_notes,profile_summary`
 
 5. **Shortlist** — status and notes per candidate.
+6. **JD match** (`/recruit/jd`) — pick a folder of resumes in the browser, rank them against a job description, filter, and download Excel. Original files are not stored. The workspace is private to the recruiter session and expires (`JD_TTL_HOURS`). Mail buttons save drafts only; nothing is sent automatically.
+
+Sample files for a dry run: [`samples/jd.txt`](samples/jd.txt) and [`samples/resumes/`](samples/resumes/).
+
+### JD match data flow
+
+1. The browser reads a local folder (`showDirectoryPicker`, or a directory file input / drop) and uploads files in batches of 15.
+2. The server extracts text (PDF, DOCX, TXT; OCR for images and empty PDFs when Tesseract and Poppler are installed), then keeps structured fields only.
+3. Ranking is deterministic: must-have skills, nice-to-have skills, experience, and location. Weights are on the form. `JS` counts as JavaScript and `k8s` as Kubernetes.
+4. Filters are AND-combined and remembered on the workspace. Export filtered uses the current filters; export all ignores them.
+5. Optional Gemini extraction is used only when `GEMINI_API_KEY` is set. Email and phone values that do not appear in the file are dropped.
 
 **Portal sync note:** Naukri, Shine, Indeed, Foundit, and Instahyre do not expose free resume APIs. With default settings, saved credentials enable **demo sync** (sample profiles tagged by portal). Set `PORTAL_LIVE_LOGIN=true` only to check whether login pages are reachable. Production use requires licensed API connectors in [`app/portals/base.py`](app/portals/base.py) or CSV export import.
 

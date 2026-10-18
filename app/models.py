@@ -103,3 +103,55 @@ class PortalCredential(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     portal: Mapped["JobPortal"] = relationship(back_populates="credential")
+
+
+class JdWorkspace(Base):
+    __tablename__ = "jd_workspaces"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner_key: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    jd_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    weights_json: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    filter_json: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    profiles: Mapped[list["JdProfile"]] = relationship(
+        back_populates="workspace", cascade="all, delete-orphan"
+    )
+
+
+class JdProfile(Base):
+    __tablename__ = "jd_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("jd_workspaces.id", ondelete="CASCADE"), index=True)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    filename: Mapped[str] = mapped_column(String(260), nullable=False, default="")
+    name: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    email: Mapped[str] = mapped_column(String(320), nullable=False, default="")
+    phone: Mapped[str] = mapped_column(String(20), nullable=False, default="")
+    location: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    matching_skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    missing_skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    company: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    notice_raw: Mapped[str] = mapped_column(String(80), nullable=False, default="")
+    notice_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    years_experience: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    workspace: Mapped["JdWorkspace"] = relationship(back_populates="profiles")
+
+
+class MailConnection(Base):
+    __tablename__ = "mail_connections"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(20), nullable=False)
+    account_email: Mapped[str] = mapped_column(String(320), nullable=False, default="")
+    access_token_enc: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    refresh_token_enc: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

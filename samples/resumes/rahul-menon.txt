@@ -1,0 +1,8 @@
+Rahul Menon
+rahul.menon@example.com
+9876543211
+Location: Pune
+Company: Tcs
+Notice period: immediate
+4 years experience
+Skills: Python, Django, PostgreSQL

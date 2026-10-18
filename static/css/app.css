@@ -116,6 +116,12 @@ pre.preview {
   font-size: 0.85rem;
 }
 
+.table-wrap { overflow-x: auto; }
+.progress { height: 10px; background: #121820; border-radius: 999px; margin-top: 0.5rem; }
+.progress > span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; }
+.drop-zone { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
+tr.row-link { cursor: pointer; }
+
 @media (max-width: 640px) {
   .grid-2 { grid-template-columns: 1fr; }
 }

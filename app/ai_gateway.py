@@ -11,6 +11,20 @@ from app.config import get_settings
 log = logging.getLogger(__name__)
 
 
+def extract_structured_profile(text: str) -> dict:
+    """LLM extraction. Caller must drop any value that is not present in the resume."""
+    prompt = (
+        "Extract only facts that appear in the resume. Use empty string or null when unknown. "
+        "Do not guess. Reply JSON only with keys: "
+        "name, email, phone, skills, company, notice_period, location, years_experience. "
+        "skills is an array of strings. years_experience is an integer or null.\n\n"
+        f"Resume:\n{text[:8000]}"
+    )
+    raw = _gemini_generate(prompt)
+    data = _parse_json_object(raw)
+    return data if isinstance(data, dict) else {}
+
+
 def extract_resume_insights(text: str) -> tuple[str, str]:
     """Returns (skills_csv, summary). Falls back to heuristics on failure."""
     settings = get_settings()

@@ -1,0 +1,8 @@
+Ananya Rao
+ananya.rao@example.com
++91 98765 43210
+Location: Bengaluru
+Company: Infosys
+Notice period: 30 days
+8 years experience
+Skills: Java, Spring Boot, Kafka, JavaScript

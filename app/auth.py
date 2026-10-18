@@ -1,3 +1,5 @@
+import hashlib
+
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from fastapi import HTTPException, Request, status
 
@@ -34,6 +36,11 @@ def is_recruiter_authenticated(request: Request) -> bool:
 def require_recruiter(request: Request) -> None:
     if not is_recruiter_authenticated(request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Recruiter login required")
+
+
+def session_owner_key(request: Request) -> str:
+    token = request.cookies.get(COOKIE_NAME) or ""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def check_password(password: str) -> bool:

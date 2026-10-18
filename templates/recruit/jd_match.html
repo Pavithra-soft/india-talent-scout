@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}JD match{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Match local profiles to a JD</h1>
+  <p class="muted">
+    Candidate data is processed only for this recruitment shortlist.
+    Files stay in this browser session’s temporary workspace
+    {% if workspace %}until {{ workspace.expires_at.strftime("%Y-%m-%d %H:%M UTC") }}{% else %}for {{ 24 }} hours after upload{% endif %}.
+    Original resumes are not kept.
+    {% if llm_enabled %}
+      An external language model (Gemini) may read resume text to fill fields. Values that are not in the file are discarded.
+    {% else %}
+      Parsing uses rules on this server. Set GEMINI_API_KEY if you want model-assisted extraction.
+    {% endif %}
+  </p>
+  <p>{{ profile_count }} profiles loaded{% if workspace and workspace.jd_text %} · job description ranked{% endif %}.</p>
+  {% if mail_status %}<p class="flash-ok">{{ mail_status }}</p>{% endif %}
+</section>
+
+<section class="card" id="jd-app" data-has-profiles="{{ 1 if profile_count else 0 }}" data-has-jd="{{ 1 if workspace and workspace.jd_text else 0 }}">
+  <h2>1. Profiles</h2>
+  <p class="muted">Choose a folder, or drop files or a zip. PDF, DOCX, TXT, and images are accepted. Unreadable files are skipped.</p>
+  <p>
+    <button class="btn" type="button" id="pick-folder">Choose folder</button>
+    <label class="btn btn-secondary" style="display:inline-block">
+      Choose files
+      <input id="pick-files" type="file" multiple webkitdirectory accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg,.zip" hidden>
+    </label>
+  </p>
+  <div class="drop-zone" id="drop-zone">Drop a folder, files, or a zip here.</div>
+  <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+  <p class="muted" id="upload-status"></p>
+
+  <h2>2. Job description</h2>
+  <form id="rank-form">
+    <label>Job description
+      <textarea name="jd_text" rows="8" placeholder="Paste the JD. Use Must-have and Nice-to-have headings when you have them.">{{ workspace.jd_text if workspace else "" }}</textarea>
+    </label>
+    <label>Or upload a JD file (.txt, .pdf, .docx)
+      <input type="file" name="jd_file" accept=".txt,.pdf,.docx">
+    </label>
+    <div class="grid-2">
+      <label>Must-have weight <input type="number" name="weight_must" min="0" max="100" value="{{ weights.must }}"></label>
+      <label>Nice-to-have weight <input type="number" name="weight_nice" min="0" max="100" value="{{ weights.nice }}"></label>
+      <label>Experience weight <input type="number" name="weight_experience" min="0" max="100" value="{{ weights.experience }}"></label>
+      <label>Location weight <input type="number" name="weight_location" min="0" max="100" value="{{ weights.location }}"></label>
+    </div>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Rank profiles</button></p>
+  </form>
+  <p class="muted" id="rank-status"></p>
+</section>
+
+<section class="card">
+  <h2>3. Filter and export</h2>
+  <form method="get" action="/recruit/jd">
+    <div class="grid-2">
+      <label>Notice period
+        <select name="notice">
+          {% for value, label in [("any","Any"),("immediate","Immediate or serving notice"),("15","≤ 15 days"),("30","≤ 30 days"),("60","≤ 60 days"),("90","≤ 90 days"),("custom","Custom range")] %}
+          <option value="{{ value }}" {% if filters.notice == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Locations (hold Ctrl or Cmd to select several)
+        <select name="locations" multiple size="4">
+          {% for city in locations %}
+          <option value="{{ city }}" {% if city in filters.locations %}selected{% endif %}>{{ city }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Custom notice min days <input type="number" name="notice_min" value="{{ filters.notice_min }}"></label>
+      <label>Custom notice max days <input type="number" name="notice_max" value="{{ filters.notice_max }}"></label>
+      <label>Name <input type="text" name="name" value="{{ filters.name }}"></label>
+      <label>Email <input type="text" name="email" value="{{ filters.email }}"></label>
+      <label>Phone <input type="text" name="phone" value="{{ filters.phone }}"></label>
+      <label>Previous company <input type="text" name="company" value="{{ filters.company }}"></label>
+      <label>Skill set contains <input type="text" name="skills" value="{{ filters.skills }}"></label>
+      <label>Matching skills contains <input type="text" name="matching" value="{{ filters.matching }}"></label>
+      <label>Non-matching skills contains <input type="text" name="missing" value="{{ filters.missing }}"></label>
+      <label>Score min <input type="number" name="score_min" value="{{ filters.score_min }}"></label>
+      <label>Score max <input type="number" name="score_max" value="{{ filters.score_max }}"></label>
+      <label>Sort
+        <select name="sort">
+          {% for value, label in [("score","Match score"),("name","Name"),("location","Location"),("notice_days","Notice period"),("company","Previous company")] %}
+          <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Direction
+        <select name="direction">
+          <option value="desc" {% if filters.direction != "asc" %}selected{% endif %}>Descending</option>
+          <option value="asc" {% if filters.direction == "asc" %}selected{% endif %}>Ascending</option>
+        </select>
+      </label>
+    </div>
+    <p style="margin-top:1rem">
+      <button class="btn" type="submit">Apply filters</button>
+      <a class="btn btn-secondary" href="/recruit/jd/export.xlsx?scope=filtered&{{ export_query }}">Export filtered</a>
+      <a class="btn btn-secondary" href="/recruit/jd/export.xlsx?scope=all">Export all</a>
+    </p>
+  </form>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th><th>Name</th><th>Email</th><th>Phone</th><th>Location</th>
+          <th>Skill set</th><th>Matching</th><th>Non-matching</th><th>Previous company</th>
+          <th>Notice</th><th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in profiles %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ profile.name }}<div class="muted">{{ profile.rationale }}</div></td>
+          <td>{{ profile.email }}</td>
+          <td>{{ profile.phone }}</td>
+          <td>{{ profile.location }}</td>
+          <td>{{ profile.skills }}</td>
+          <td>{{ profile.matching_skills }}</td>
+          <td>{{ profile.missing_skills }}</td>
+          <td>{{ profile.company }}</td>
+          <td>{{ profile.notice_raw or profile.notice_days }}</td>
+          <td>{{ profile.score if profile.score is not none else "" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="11" class="muted">No profiles match these filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <form method="post" action="/recruit/jd/clear" style="margin-top:1rem" onsubmit="return confirm('Clear the temporary profiles, scores, and filters?');">
+    <button class="btn btn-secondary" type="submit">Clear temporary data</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>4. Draft a reply</h2>
+  <p class="muted">Drafts are saved in your mailbox for you to review. This app does not send mail.</p>
+  <p>
+    {% if google_ready %}
+      <a class="btn btn-secondary" href="/recruit/jd/mail/google">Connect Gmail</a>
+    {% else %}
+      <span class="muted">Gmail connect needs GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET.</span>
+    {% endif %}
+    {% if microsoft_ready %}
+      <a class="btn btn-secondary" href="/recruit/jd/mail/microsoft">Connect Outlook</a>
+    {% else %}
+      <span class="muted">Outlook connect needs MICROSOFT_OAUTH_CLIENT_ID and MICROSOFT_OAUTH_CLIENT_SECRET.</span>
+    {% endif %}
+  </p>
+  {% for connection in connections %}
+  <form method="post" action="/recruit/jd/mail/{{ connection.provider }}/disconnect">
+    <span class="pill">{{ connection.provider }} · {{ connection.account_email }}</span>
+    <button class="btn btn-secondary" type="submit">Disconnect</button>
+  </form>
+  {% endfor %}
+  <form method="post" action="/recruit/jd/drafts">
+    <label>Profile
+      <select name="profile_id" id="draft-profile">
+        {% for profile in profiles %}
+        <option value="{{ profile.id }}">{{ profile.name or profile.filename }} — {{ profile.email }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="grid-2">
+      <label>Template
+        <select name="template_key">
+          <option value="interest">Confirm interest and ask notice / CTC</option>
+          <option value="schedule">Ask for interview times</option>
+        </select>
+      </label>
+      <label>Tone
+        <select name="tone">
+          <option value="formal">Formal</option>
+          <option value="concise">Concise</option>
+        </select>
+      </label>
+    </div>
+    <label>Reply context from their email (optional)
+      <textarea name="reply_context" id="reply-context" rows="3"></textarea>
+    </label>
+    <label>Subject (leave blank to use the template)
+      <input type="text" name="subject">
+    </label>
+    <label>Body (leave blank to use the template)
+      <textarea name="body" rows="6"></textarea>
+    </label>
+    <p style="margin-top:1rem">
+      <button class="btn btn-secondary" type="button" id="load-replies">Load their recent emails</button>
+      <button class="btn" type="submit">Save draft</button>
+    </p>
+    <p class="muted" id="reply-list"></p>
+  </form>
+</section>
+<script src="/static/js/jd_match.js"></script>
+{% endblock %}

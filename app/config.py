@@ -26,6 +26,12 @@ class Settings:
         self.is_sqlite = self.database_url.startswith("sqlite")
         self.port = int(os.getenv("PORT", "8081"))
         self.portal_live_login = os.getenv("PORTAL_LIVE_LOGIN", "false").lower() in ("1", "true", "yes")
+        self.jd_ttl_hours = int(os.getenv("JD_TTL_HOURS", "24"))
+        self.oauth_redirect_base = os.getenv("OAUTH_REDIRECT_BASE", "http://127.0.0.1:8081").rstrip("/")
+        self.google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "").strip()
+        self.google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "").strip()
+        self.microsoft_oauth_client_id = os.getenv("MICROSOFT_OAUTH_CLIENT_ID", "").strip()
+        self.microsoft_oauth_client_secret = os.getenv("MICROSOFT_OAUTH_CLIENT_SECRET", "").strip()
 
 
 def _normalize_database_url(url: str) -> str:
