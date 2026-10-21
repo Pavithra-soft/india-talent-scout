@@ -11,7 +11,7 @@ from app.database import SessionLocal, engine
 from app.demo_seed import seed_demo_candidates
 from app.models import Base
 from app.portal_service import ensure_portals
-from app.routes import jd_match, portal_search, public, recruit
+from app.routes import jd_match, job_postings, portal_search, public, recruit
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,6 +38,8 @@ app.include_router(public.router)
 app.include_router(recruit.router)
 app.include_router(jd_match.router)
 app.include_router(portal_search.router)
+app.include_router(job_postings.router)
+app.include_router(job_postings.recruit_router)
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 

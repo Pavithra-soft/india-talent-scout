@@ -206,6 +206,43 @@ class RecruitAudit(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class JobPosting(Base):
+    __tablename__ = "job_postings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    jd_text: Mapped[str] = mapped_column(Text, nullable=False)
+    share_token: Mapped[str] = mapped_column(String(32), nullable=False, unique=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    applications: Mapped[list["JobApplication"]] = relationship(
+        back_populates="posting", cascade="all, delete-orphan"
+    )
+
+
+class JobApplication(Base):
+    __tablename__ = "job_applications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    posting_id: Mapped[int] = mapped_column(ForeignKey("job_postings.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
+    phone: Mapped[str] = mapped_column(String(40), nullable=False)
+    years_experience: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    skills: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    notice_raw: Mapped[str] = mapped_column(String(120), nullable=False)
+    notice_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    additional_notes: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    resume_stored_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    resume_content_type: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    resume_original_filename: Mapped[Optional[str]] = mapped_column(String(260), nullable=True)
+    resume_extracted_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+
+    posting: Mapped["JobPosting"] = relationship(back_populates="applications")
+
+
 class MailConnection(Base):
     __tablename__ = "mail_connections"
 

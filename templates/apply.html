@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{% if posting %}{{ posting.title }} · Apply{% else %}Apply{% endif %}{% endblock %}
+{% if posting %}
+{% block extra_head %}
+  <meta property="og:title" content="{{ posting.title }}">
+  <meta property="og:description" content="Apply for this role — share your profile and resume.">
+  <meta property="og:url" content="{{ share_url }}">
+  <meta name="twitter:card" content="summary">
+{% endblock %}
+{% endif %}
+{% block content %}
+{% if not posting %}
+<section class="card">
+  <h1>Job not found</h1>
+  <p class="muted">This application link may be invalid or expired.</p>
+</section>
+{% else %}
+<section class="card">
+  <h1>{{ posting.title }}</h1>
+  {% if not posting.is_active %}
+  <p class="flash-err">This job is closed and is not accepting new applications.</p>
+  {% endif %}
+  <div class="jd-preview muted">{{ posting.jd_text }}</div>
+</section>
+<section class="card">
+  <h2>Apply</h2>
+  <p class="muted">Resume and notice period are required. Other fields are optional — we read name, contact, experience, and skills from your resume when you leave them blank.</p>
+  {% if success %}
+  <p class="flash-ok">Application submitted. Thank you — the recruiting team will review your profile.</p>
+  {% endif %}
+  {% if error %}
+  <p class="flash-err">{{ error }}</p>
+  {% endif %}
+  {% if posting.is_active and not success %}
+  <form method="post" action="/apply/{{ posting.share_token }}" enctype="multipart/form-data">
+    <label>Resume (PDF, DOCX, TXT)<input type="file" name="resume" accept=".pdf,.docx,.txt" required></label>
+    <label>Notice period<input type="text" name="notice_period" required placeholder="30 days / Immediate"></label>
+    <label>Name<input type="text" name="name" autocomplete="name" placeholder="Optional if on resume"></label>
+    <label>Email<input type="email" name="email" autocomplete="email" placeholder="Optional if on resume"></label>
+    <label>Phone number<input type="tel" name="phone" autocomplete="tel" placeholder="Optional if on resume"></label>
+    <label>Years of experience<input type="number" name="years_experience" min="0" max="50" placeholder="Optional if on resume"></label>
+    <label>Skills (comma-separated)<input type="text" name="skills" placeholder="Optional — merged with resume"></label>
+    <label>Additional notes<textarea name="additional_notes" rows="3" placeholder="Current company, preferred location, etc."></textarea></label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Apply</button></p>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

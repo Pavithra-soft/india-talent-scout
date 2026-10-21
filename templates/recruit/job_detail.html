@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ posting.title }} · Applications{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ posting.title }}</h1>
+  <p class="muted">{% if posting.is_active %}Accepting applications{% else %}Closed{% endif %}</p>
+  <p><a class="btn btn-secondary" href="/recruit/jobs">← All postings</a></p>
+  <div class="jd-preview muted" style="margin-top:1rem">{{ posting.jd_text }}</div>
+</section>
+<section class="card">
+  <h2>Share apply link</h2>
+  <p class="muted">Send this URL in email, WhatsApp, Instagram bio, or LinkedIn. Candidates fill the form and click Apply.</p>
+  <div class="share-row">
+    <input type="text" id="apply-link" readonly value="{{ apply_link }}" class="share-input">
+    <button type="button" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('apply-link').value)">Copy link</button>
+  </div>
+  <p style="margin-top:0.75rem">
+    <a class="btn btn-secondary" href="{{ mailto_href }}">Share via email</a>
+    <a class="btn btn-secondary" href="{{ apply_link }}" target="_blank" rel="noopener">Preview apply page</a>
+  </p>
+  <form method="post" action="/recruit/jobs/{{ posting.id }}/toggle" style="margin-top:1rem">
+    <button class="btn btn-secondary" type="submit">{% if posting.is_active %}Close applications{% else %}Re-open applications{% endif %}</button>
+  </form>
+</section>
+<section class="card">
+  <h2>Applications ({{ application_rows|length }})</h2>
+  <p class="muted">Name, contact, experience, and skills use the form when provided; otherwise values are read from the uploaded resume.</p>
+  <p>
+    <a class="btn btn-secondary" href="/recruit/jobs/{{ posting.id }}/export.xlsx">Download Excel</a>
+    <a class="btn btn-secondary" href="/recruit/jobs/{{ posting.id }}/export.zip">Download ZIP (Excel + resumes)</a>
+  </p>
+  {% if not application_rows %}
+  <p class="muted">No applications yet. Share the link above.</p>
+  {% else %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Applied</th>
+        <th>Name</th>
+        <th>Contact</th>
+        <th>Exp.</th>
+        <th>Notice</th>
+        <th>Skills</th>
+        <th>Location</th>
+        <th>Resume</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for app, view in application_rows %}
+      <tr>
+        <td>{{ app.applied_at.strftime('%Y-%m-%d %H:%M') if app.applied_at else '' }}</td>
+        <td>{{ view.name }}</td>
+        <td>{{ view.email }}<br><span class="muted">{{ view.phone }}</span></td>
+        <td>{{ view.years_experience }}</td>
+        <td>{{ app.notice_raw }}</td>
+        <td class="cell-wrap">{{ view.skills }}</td>
+        <td class="cell-wrap">{{ view.location }}{% if view.company != '—' %}<br><span class="muted">{{ view.company }}</span>{% endif %}</td>
+        <td>
+          {% if app.resume_stored_path %}
+          <a href="/recruit/jobs/{{ posting.id }}/applications/{{ app.id }}/resume">Download</a>
+          {% else %}—{% endif %}
+        </td>
+        <td class="actions-col">
+          {% if app.resume_stored_path %}
+          <form method="post" action="/recruit/jobs/{{ posting.id }}/applications/{{ app.id }}/delete-resume">
+            <button class="btn btn-secondary btn-sm" type="submit">Delete resume file</button>
+          </form>
+          {% endif %}
+          <form method="post" action="/recruit/jobs/{{ posting.id }}/applications/{{ app.id }}/delete" onsubmit="return confirm('Delete this application and any resume file?');">
+            <button class="btn btn-danger btn-sm" type="submit">Delete application</button>
+          </form>
+        </td>
+      </tr>
+      {% if app.additional_notes %}
+      <tr>
+        <td colspan="9" class="muted cell-wrap"><strong>Notes:</strong> {{ app.additional_notes }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

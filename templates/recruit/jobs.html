@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Job postings · Recruiter{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Job postings &amp; applications</h1>
+  <p class="muted">Create a job description, share the apply link by email or social media, and review submissions here.</p>
+  <p><a class="btn btn-secondary" href="/recruit">← Dashboard</a></p>
+  {% if error %}
+  <p class="flash-err">{{ error }}</p>
+  {% endif %}
+</section>
+<section class="card">
+  <h2>New posting</h2>
+  <form method="post" action="/recruit/jobs">
+    <label>Job title<input type="text" name="title" required placeholder="Senior Backend Engineer"></label>
+    <label>Job description<textarea name="jd_text" rows="8" required placeholder="Role summary, must-have skills, location…"></textarea></label>
+    <p style="margin-top:1rem"><button class="btn" type="submit">Create &amp; get share link</button></p>
+  </form>
+</section>
+<section class="card">
+  <h2>Your postings</h2>
+  {% if not postings %}
+  <p class="muted">No postings yet.</p>
+  {% else %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Created</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for posting in postings %}
+      <tr>
+        <td>{{ posting.title }}</td>
+        <td>{{ posting.created_at.strftime('%Y-%m-%d') if posting.created_at else '' }}</td>
+        <td>{% if posting.is_active %}Open{% else %}Closed{% endif %}</td>
+        <td><a href="/recruit/jobs/{{ posting.id }}">View applications</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+{% endblock %}

@@ -61,6 +61,8 @@ header nav a { margin-left: 1rem; }
 }
 
 .btn-secondary { background: #445066; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 0.35rem 0.6rem; font-size: 0.82rem; margin-top: 0.35rem; }
 
 label { display: block; margin-top: 0.75rem; font-size: 0.9rem; }
 
@@ -121,6 +123,21 @@ pre.preview {
 .progress > span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; }
 .drop-zone { border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; margin-top: 0.75rem; }
 tr.row-link { cursor: pointer; }
+
+.data-table { margin-top: 0.75rem; }
+.cell-wrap { max-width: 200px; word-break: break-word; }
+.actions-col form { display: inline-block; margin-right: 0.25rem; }
+.jd-preview { white-space: pre-wrap; line-height: 1.55; }
+.share-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 0.5rem; }
+.share-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #121820;
+  color: var(--text);
+}
 
 @media (max-width: 640px) {
   .grid-2 { grid-template-columns: 1fr; }

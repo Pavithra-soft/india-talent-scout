@@ -55,6 +55,11 @@ def file_hash(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+def fields_from_resume_text(text: str) -> dict:
+    """Structured contact and skill fields parsed from resume text only."""
+    return _fields_from_text((text or "").strip())
+
+
 def parse_upload(filename: str, content: bytes) -> BatchResult:
     result = BatchResult()
     safe_name = _safe_name(filename)
